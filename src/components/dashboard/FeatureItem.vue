@@ -3,27 +3,68 @@ import { defineComponent, PropType } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import { FeatureBySprintDTO } from "@/dto/feature-by-sprint";
 import OrderItem from "@/components/dashboard/OrderItem.vue";
+import OrderLineForm from "./OrderLineForm.vue";
+import { SelectOptionDTO } from "@/dto/admin/select";
+import axios, { AxiosError } from "axios";
 
 export default defineComponent({
   props: {
     feature: {
       type: Object as PropType<FeatureBySprintDTO>,
       required: true,
-      addLineOn: false,
     },
   },
   methods: {
-    clickFeature() {
+    async clickFeature() {
       this.opened = !this.opened;
+    },
+    async createNewOrder() {
+      axios
+        .post(`/api/v1/feature-team-orders/`, {
+          dev_team_id: this.currentDevTeam.id,
+          hours: this.currentHours,
+          gap: this.currentGap,
+          developer_id: this.currentDeveloper.id,
+          feature_id: this.feature.id,
+        })
+        .then(() => {
+          this.$emit("reload");
+        })
+        .catch((error: AxiosError) => {
+          console.log(error);
+        });
+    },
+    async devTeamChange(devTeam: SelectOptionDTO) {
+      this.currentDevTeam = devTeam;
+      this.currentDeveloper = {};
+    },
+    async devChange(dev: SelectOptionDTO) {
+      this.currentDeveloper = dev;
+    },
+    async hoursChange(hours: number) {
+      this.currentHours = hours;
+    },
+    async gapChange(gap: number) {
+      this.currentGap = gap;
+    },
+    async saveChanges() {
+      await this.createNewOrder();
+      this.addLineOn = false;
     },
   },
   data() {
     return {
       opened: false,
+      addLineOn: false,
+      currentDevTeam: {} as SelectOptionDTO,
+      currentDeveloper: {} as SelectOptionDTO,
+      currentHours: 20,
+      currentGap: 0,
     };
   },
   components: {
     OrderItem,
+    OrderLineForm,
   },
   computed: {
     featureStyle() {
@@ -31,9 +72,13 @@ export default defineComponent({
         return {
           height: `${70 * (this.feature.dev_team_orders.length + 2)}px`,
           maxHeight: "auto",
+          opacity: 1,
         };
       } else {
-        return {};
+        return {
+          opacity: 0,
+          overflow: "hidden",
+        };
       }
     },
   },
@@ -60,11 +105,26 @@ export default defineComponent({
         :key="order.id"
         @reload="$emit('reload')"
       />
-      <li class="orders__item">
+      <li class="orders__item" v-if="!addLineOn">
         <div class="center__it">
-          <button class="add__btn">Добавить задание</button>
+          <button class="add__btn" @click="addLineOn = true">
+            Добавить задание
+          </button>
         </div>
       </li>
+      <OrderLineForm
+        :dev-team="currentDevTeam"
+        :developer="currentDeveloper"
+        :hours="currentHours"
+        :gap="currentGap"
+        @devteam="devTeamChange"
+        @dev="devChange"
+        @hours="hoursChange"
+        @gap="gapChange"
+        v-if="addLineOn"
+        @save="saveChanges"
+        @cancel="addLineOn = false"
+      />
     </ul>
   </li>
 </template>
@@ -99,22 +159,23 @@ export default defineComponent({
 }
 
 .orders {
+  position: relative;
   padding: 0;
   margin: 0;
-  overflow: hidden;
   height: 0px;
   top: 100%;
   width: 90%;
   list-style: none;
   color: cadetblue;
   background-color: white;
-  will-change: height;
-  transition: height 0.5s ease-in-out, z-index 0.5s ease-in-out;
+  will-change: height, overflow;
+  transition: height 0.5s ease-in-out, opacity 1s ease-in-out;
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
 }
 
 .orders__item {
+  position: relative;
   padding: 0;
   height: 70px;
   justify-content: space-between;

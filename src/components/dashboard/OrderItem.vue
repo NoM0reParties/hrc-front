@@ -2,12 +2,11 @@
 import { defineComponent, PropType } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import { FeatureTeamOrderDTO } from "@/dto/feature-team-order";
-import NumberInput from "../inputs/NumberInput.vue";
 import axios, { AxiosResponse, AxiosError } from "axios";
 import { DeveloperTeamDTO } from "@/dto/developer-team";
-import SelectInput from "../selects/SelectDependantEntity.vue";
 import { SelectOptionDTO } from "@/dto/admin/select";
 import { DeveloperDTO } from "@/dto/developer";
+import OrderLineForm from "./OrderLineForm.vue";
 
 export default defineComponent({
   props: {
@@ -24,32 +23,12 @@ export default defineComponent({
       possibleDevelopers: [] as DeveloperDTO[],
       currentDevTeam: {} as SelectOptionDTO,
       currentDeveloper: {} as SelectOptionDTO,
-      currentHours: 10,
-      currentGap: 0,
+      currentHours: this.order.hours,
+      currentGap: this.order.gap,
     };
   },
   methods: {
-    fetchDeveloperTeams() {
-      axios
-        .get("/api/v1/developer-teams")
-        .then((response: AxiosResponse<DeveloperTeamDTO[]>) => {
-          this.possibleTeams = response.data;
-        })
-        .catch((error: AxiosError) => {
-          console.log(error);
-        });
-    },
-    fetchDevelopers() {
-      axios
-        .get(`/api/v1/developers?team=${this.currentDevTeam.id}`)
-        .then((response: AxiosResponse<DeveloperDTO[]>) => {
-          this.possibleDevelopers = response.data;
-        })
-        .catch((error: AxiosError) => {
-          console.log(error);
-        });
-    },
-    updateOrder() {
+    async updateOrder() {
       axios
         .put(`/api/v1/feature-team-orders/${this.order.id}`, {
           dev_team_id: this.currentDevTeam.id,
@@ -64,8 +43,7 @@ export default defineComponent({
           console.log(error);
         });
     },
-    editClick() {
-      this.fetchDeveloperTeams();
+    async editClick() {
       this.currentDevTeam = {
         id: this.order.dev_team.id,
         name: this.order.dev_team.name,
@@ -76,25 +54,23 @@ export default defineComponent({
       };
       this.currentHours = this.order.hours;
       this.currentGap = this.order.gap;
-      this.fetchDevelopers();
       this.editMode = true;
     },
-    saveChanges() {
+    async saveChanges() {
       this.updateOrder();
       this.editMode = false;
     },
-    devTeamChange(devTeam: SelectOptionDTO) {
+    async devTeamChange(devTeam: SelectOptionDTO) {
       this.currentDevTeam = devTeam;
       this.currentDeveloper = {};
-      this.fetchDevelopers();
     },
-    devChange(dev: SelectOptionDTO) {
+    async devChange(dev: SelectOptionDTO) {
       this.currentDeveloper = dev;
     },
-    hoursChange(hours: number) {
+    async hoursChange(hours: number) {
       this.currentHours = hours;
     },
-    gapChange(gap: number) {
+    async gapChange(gap: number) {
       this.currentGap = gap;
     },
   },
@@ -108,8 +84,7 @@ export default defineComponent({
     },
   },
   components: {
-    NumberInput,
-    SelectInput,
+    OrderLineForm,
   },
 });
 </script>
@@ -125,36 +100,20 @@ export default defineComponent({
         <button class="edit__btn" @click="editClick">Редактировать</button>
       </span>
     </div>
-    <div v-if="editMode" class="orders__item">
-      <span class="order__item-col"
-        ><SelectInput
-          :options="possibleTeams"
-          width="150px"
-          :disabled="false"
-          :initName="currentDevTeam.name"
-          :initID="currentDevTeam.id"
-          @selectChange="devTeamChange"
-      /></span>
-      <span class="order__item-col"
-        ><NumberInput :initValue="currentHours" @input="hoursChange"
-      /></span>
-      <span class="order__item-col"
-        ><SelectInput
-          :options="possibleDevelopers"
-          width="150px"
-          :disabled="false"
-          :initName="currentDeveloper.name"
-          :initID="currentDeveloper.id"
-          @selectChange="devChange"
-      /></span>
-      <span class="order__item-col"
-        ><NumberInput :initValue="currentGap" @input="gapChange"
-      /></span>
-      <span class="order__item-col">
-        <button class="save__btn" @click="saveChanges">OK</button
-        ><button class="close__btn" @click="editMode = false">X</button>
-      </span>
-    </div>
+
+    <OrderLineForm
+      :dev-team="currentDevTeam"
+      :developer="currentDeveloper"
+      :hours="currentHours"
+      :gap="currentGap"
+      @devteam="devTeamChange"
+      @dev="devChange"
+      @hours="hoursChange"
+      @gap="gapChange"
+      v-if="editMode"
+      @save="saveChanges"
+      @cancel="editMode = false"
+    />
   </li>
 </template>
 
@@ -187,27 +146,6 @@ export default defineComponent({
   color: white;
   border: none;
   font-size: large;
-  cursor: pointer;
-}
-
-.save__btn {
-  width: 55px;
-  height: 40px;
-  margin-right: 10px;
-  border-radius: 15px;
-  border: none;
-  background-color: cadetblue;
-  color: white;
-  cursor: pointer;
-}
-
-.close__btn {
-  width: 55px;
-  height: 40px;
-  border-radius: 15px;
-  border: none;
-  background-color: rgb(184, 223, 224);
-  color: white;
   cursor: pointer;
 }
 </style>

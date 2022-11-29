@@ -18,9 +18,11 @@ export default defineComponent({
   methods: {
     async fetchSprintList() {
       axios
-        .get("/api/v1/sprints/")
+        .get("/api/v1/sprints?limit=5")
         .then((response: AxiosResponse<SprintDTO[]>) => {
-          this.sprintList = response.data;
+          this.sprintList = response.data.sort((a: SprintDTO, b: SprintDTO) => {
+            return a.id > b.id ? 1 : -1;
+          });
           this.currSprintID = Math.max(...this.sprintList.map((o) => o.id));
         })
         .catch((error: AxiosError) => {
@@ -40,6 +42,9 @@ export default defineComponent({
     async handleSprint(sprintID: number) {
       this.currSprintID = sprintID;
       await this.fetchFeaturesList();
+    },
+    async reloadData() {
+      this.fetchFeaturesList();
     },
   },
   async created() {
@@ -62,7 +67,11 @@ export default defineComponent({
       @sprint="handleSprint"
     />
     <h3>фичи</h3>
-    <FeaturesList :features="featureList" @reload="fetchFeaturesList" />
+    <FeaturesList
+      :features="featureList"
+      :sprint-i-d="currSprintID"
+      @reload="reloadData"
+    />
   </div>
 </template>
 
