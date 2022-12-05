@@ -7,6 +7,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("../views/MainDashboardView.vue"),
   },
   {
+    path: "/teams",
+    name: "teams",
+    component: () => import("@/views/DeveloperTeams.vue"),
+  },
+  {
     path: "/admin",
     name: "admin",
     component: () => import("../views/AdminView.vue"),

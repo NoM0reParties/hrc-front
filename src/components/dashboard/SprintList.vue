@@ -3,7 +3,8 @@ import { defineComponent, PropType } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import { SprintDTO } from "@/dto/admin/sprint";
 import SprintLineForm from "./SprintLineForm.vue";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosError } from "axios";
+import ModalConfirmWindow from "@/components/utilities/ModalConfirmWindow.vue";
 
 export default defineComponent({
   props: {
@@ -18,6 +19,9 @@ export default defineComponent({
   },
   data() {
     return {
+      modalActive: false,
+      deleteSprintID: 0,
+      deleteSprint: false,
       newSprint: false,
       newSprintName: "",
       newSprintGap: 0,
@@ -36,8 +40,9 @@ export default defineComponent({
       this.newSprintBegin = begin;
       this.newSprintEnd = end;
       this.createEntity();
+      this.newSprint = false;
     },
-    async cancelNew(name: string) {
+    async cancelNew() {
       this.newSprint = false;
     },
     async createEntity() {
@@ -48,16 +53,37 @@ export default defineComponent({
           ending_date: this.newSprintEnd,
           gap: this.newSprintGap,
         })
-        .then((response: AxiosResponse<SprintDTO>) => {
-          console.log(response.data);
+        .then(() => {
+          this.$emit("newsprint");
         })
         .catch((error: AxiosError) => {
           console.log(error);
         });
     },
+
+    async removeEntity() {
+      axios
+        .delete(`/api/v1/sprints/${this.deleteSprintID}`)
+        .then(() => {
+          this.modalActive = false;
+          this.deleteSprintID = 0;
+          this.$emit("newsprint");
+        })
+        .catch((error: AxiosError) => {
+          console.log(error);
+        });
+    },
+    async RemoveSprintConfrim() {
+      this.removeEntity();
+    },
+    async SprintDelete(ID: number) {
+      this.deleteSprintID = ID;
+      this.modalActive = true;
+    },
   },
   components: {
     SprintLineForm,
+    ModalConfirmWindow,
   },
 });
 </script>
@@ -69,18 +95,53 @@ export default defineComponent({
       v-for="sprint in sprints"
       :key="sprint.id"
       @click="$emit('sprint', sprint.id)"
-      :class="{ chosen: sprint.id === chosenSprint, hidden: newSprint }"
+      :class="{
+        chosen: sprint.id === chosenSprint,
+        hidden: newSprint || deleteSprint,
+      }"
     >
       <p>Спринт №{{ sprint.id }}</p>
       {{ sprint.beginning_date }} -
       {{ sprint.ending_date }}
     </li>
     <li
-      class="sprint__list-item sprint__list-new"
-      @click="newSprint = true"
-      :class="{ hidden: newSprint }"
+      class="sprint__list-item actions__remove"
+      v-for="sprint in sprints"
+      :key="sprint.id"
+      @click="SprintDelete(sprint.id)"
+      :class="{
+        hidden: !deleteSprint,
+      }"
     >
-      +
+      Спринт №{{ sprint.id }}
+      <font-awesome-icon
+        class="action__removebtn"
+        icon="fa-solid fa-trash-can"
+        size="3x"
+      />
+    </li>
+    <li class="sprint__list-item actions__item" :class="{ hidden: newSprint }">
+      <font-awesome-icon
+        icon="fa-solid fa-circle-plus"
+        class="action__btn"
+        size="3x"
+        @click="newSprint = true"
+        v-if="!deleteSprint"
+      />
+      <font-awesome-icon
+        class="action__btn"
+        icon="fa-solid fa-trash-can"
+        size="3x"
+        @click="deleteSprint = true"
+        v-if="!deleteSprint"
+      />
+      <font-awesome-icon
+        class="action__btn"
+        icon="fa-solid fa-chevron-left"
+        size="3x"
+        @click="deleteSprint = false"
+        v-if="deleteSprint"
+      />
     </li>
     <SprintLineForm
       :name="newSprintName"
@@ -91,6 +152,13 @@ export default defineComponent({
       @cancel="cancelNew"
       v-if="newSprint"
     />
+    <ModalConfirmWindow
+      :message="`Вы действительно хотите удалить спринт номер ${deleteSprintID}?`"
+      action-message="Удалить"
+      v-if="modalActive"
+      @confirm="RemoveSprintConfrim"
+      @cancel="modalActive = false"
+    />
   </ul>
 </template>
 
@@ -98,6 +166,8 @@ export default defineComponent({
 .sprint__list {
   list-style: none;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin: 0;
   padding: 0;
 }
@@ -106,7 +176,6 @@ export default defineComponent({
   width: 200px;
   height: 150px;
   background-color: cadetblue;
-  margin: 0 10px;
   transition: all 0.7s ease-in-out;
   cursor: pointer;
   color: white;
@@ -114,26 +183,46 @@ export default defineComponent({
   border-radius: 15px;
 }
 
-.sprint__list-new {
-  font-weight: 4800;
-  font-size: 100px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .chosen {
   border: 3px solid;
   transform: scale(1.2);
-  background-color: rgb(101, 191, 194);
+  background-color: rgb(57, 161, 165);
+}
+.actions__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  cursor: auto;
+  background-color: white;
 }
 
-.hidden {
-  display: none;
+.action__btn {
+  border-radius: 10px;
+  padding: 10px;
+  color: white;
+  cursor: pointer;
+  background-color: cadetblue;
+}
+
+.action__removebtn {
+  display: block;
+  color: white;
+}
+
+.actions__remove {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-around;
+  background-color: rgb(126, 72, 72);
 }
 
 p {
   font-size: 24px;
   margin-bottom: 50px;
+}
+
+.hidden {
+  display: none;
 }
 </style>

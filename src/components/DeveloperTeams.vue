@@ -3,15 +3,15 @@ import { defineComponent } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import axios, { AxiosResponse, AxiosError } from "axios";
 import { SprintDTO } from "@/dto/admin/sprint";
-import { FeatureBySprintDTO } from "@/dto/feature-by-sprint";
+import { DevTeamBySprintDTO } from "@/dto/teams/DevTeamBySprintDTO";
 import SprintList from "@/components/dashboard/SprintList.vue";
-import FeaturesList from "@/components/dashboard/FeatureList.vue";
+import DevTeamsList from "./team/DevTeamsList.vue";
 
 export default defineComponent({
   data() {
     return {
       sprintList: [] as SprintDTO[],
-      featureList: {} as FeatureBySprintDTO[],
+      teamList: {} as DevTeamBySprintDTO[],
       currSprintID: 0 as number,
     };
   },
@@ -31,9 +31,9 @@ export default defineComponent({
     },
     async fetchFeaturesList() {
       axios
-        .get(`/api/v1/features/sprint/${this.currSprintID}`)
-        .then((response: AxiosResponse<FeatureBySprintDTO[]>) => {
-          this.featureList = response.data;
+        .get(`/api/v1/developer-teams/sprint/${this.currSprintID}`)
+        .then((response: AxiosResponse<DevTeamBySprintDTO[]>) => {
+          this.teamList = response.data;
         })
         .catch((error: AxiosError) => {
           console.log(error);
@@ -53,7 +53,7 @@ export default defineComponent({
   },
   components: {
     SprintList,
-    FeaturesList,
+    DevTeamsList,
   },
 });
 </script>
@@ -67,9 +67,9 @@ export default defineComponent({
       @sprint="handleSprint"
       @newsprint="fetchSprintList"
     />
-    <h3>фичи</h3>
-    <FeaturesList
-      :features="featureList"
+    <h3>команды</h3>
+    <DevTeamsList
+      :teams="teamList"
       :sprint-i-d="currSprintID"
       @reload="reloadData"
     />
