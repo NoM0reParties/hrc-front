@@ -28,7 +28,6 @@ export default defineComponent({
         });
     },
     clickMainLine() {
-      console.log("collapse", this.entityName);
       this.$emit("collapse", this.entityName);
     },
   },

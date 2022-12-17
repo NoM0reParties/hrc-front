@@ -2,57 +2,34 @@
 import { defineComponent } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import axios, { AxiosResponse, AxiosError } from "axios";
-import { SprintDTO } from "@/dto/admin/sprint";
-import { DevTeamBySprintDTO } from "@/dto/teams/DevTeamBySprintDTO";
-import SprintList from "@/components/dashboard/SprintList.vue";
+import { DeveloperTeamDTO } from "@/dto/teams/DevTeamBySprintDTO";
 import DevTeamsList from "./team/DevTeamsList.vue";
 
 export default defineComponent({
   data() {
     return {
-      sprintList: [] as SprintDTO[],
-      teamList: {} as DevTeamBySprintDTO[],
-      currSprintID: 0 as number,
+      teamList: [] as DeveloperTeamDTO[],
     };
   },
   methods: {
-    async fetchSprintList() {
+    async fetchDevTeamsList() {
       axios
-        .get("/api/v1/sprints?limit=5")
-        .then((response: AxiosResponse<SprintDTO[]>) => {
-          this.sprintList = response.data.sort((a: SprintDTO, b: SprintDTO) => {
-            return a.id > b.id ? 1 : -1;
-          });
-          this.currSprintID = Math.max(...this.sprintList.map((o) => o.id));
-        })
-        .catch((error: AxiosError) => {
-          console.log(error);
-        });
-    },
-    async fetchFeaturesList() {
-      axios
-        .get(`/api/v1/developer-teams/sprint/${this.currSprintID}`)
-        .then((response: AxiosResponse<DevTeamBySprintDTO[]>) => {
+        .get(`/api/v1/developer-teams/`)
+        .then((response: AxiosResponse<DeveloperTeamDTO[]>) => {
           this.teamList = response.data;
         })
         .catch((error: AxiosError) => {
           console.log(error);
         });
     },
-    async handleSprint(sprintID: number) {
-      this.currSprintID = sprintID;
-      await this.fetchFeaturesList();
-    },
     async reloadData() {
-      this.fetchFeaturesList();
+      this.fetchDevTeamsList();
     },
   },
   async created() {
-    await this.fetchSprintList();
-    await this.fetchFeaturesList();
+    await this.fetchDevTeamsList();
   },
   components: {
-    SprintList,
     DevTeamsList,
   },
 });
@@ -60,24 +37,14 @@ export default defineComponent({
 
 <template>
   <div>
-    <h3>спринты</h3>
-    <SprintList
-      :sprints="sprintList"
-      :chosen-sprint="currSprintID"
-      @sprint="handleSprint"
-      @newsprint="fetchSprintList"
-    />
-    <h3>команды</h3>
-    <DevTeamsList
-      :teams="teamList"
-      :sprint-i-d="currSprintID"
-      @reload="reloadData"
-    />
+    <h3>Команды</h3>
+    <DevTeamsList :teams="teamList" @reload="reloadData" />
   </div>
 </template>
 
 <style scoped>
 h3 {
+  font-weight: 500;
   font-size: 34px;
   margin-bottom: 50px;
   text-align: left;

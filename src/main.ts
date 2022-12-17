@@ -8,9 +8,10 @@ import {
   faCirclePlus,
   faPen,
   faTrashCan,
+  faUserPen,
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faPen, faTrashCan, faCirclePlus, faChevronLeft);
+library.add(faPen, faTrashCan, faCirclePlus, faChevronLeft, faUserPen);
 
 createApp(App)
   .component("font-awesome-icon", FontAwesomeIcon)

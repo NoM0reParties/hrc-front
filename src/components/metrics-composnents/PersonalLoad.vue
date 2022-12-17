@@ -21,6 +21,11 @@ export default defineComponent({
       required: false,
       default: "white",
     },
+    fadeColor: {
+      type: String,
+      required: false,
+      default: "rgba(128, 128, 128, 0.404)",
+    },
     units: {
       type: String,
       required: false,
@@ -51,19 +56,23 @@ export default defineComponent({
     },
     statStyle() {
       return {
-        height: `${this.height / 2}px`,
+        height: `${this.height / 3}px`,
         width: `${this.width}px`,
       };
     },
     loadStyle() {
       return {
         width: `${this.width}px`,
-        height: `${this.height / 2}px`,
+        height: `${this.height / 3}px`,
+      };
+    },
+    fadeStyle() {
+      return {
+        backgroundColor: this.fadeColor,
       };
     },
     lineStyle() {
       const load = this.loadPercent();
-      console.log(load);
       if (load > 100) {
         return {
           width: `${load}%`,
@@ -86,7 +95,7 @@ export default defineComponent({
       {{ current }}/{{ overall }} {{ units }}
     </div>
     <div class="load__block" :style="loadStyle">
-      <div class="line__block-fade"></div>
+      <div class="line__block-fade" :style="fadeStyle"></div>
       <div class="line__block" :style="lineStyle"></div>
     </div>
   </div>
@@ -95,6 +104,9 @@ export default defineComponent({
 <style scoped>
 .main__block {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
 
 .load__block {
@@ -116,6 +128,5 @@ export default defineComponent({
   border-radius: 10px;
   width: 100%;
   z-index: 0;
-  background-color: rgba(128, 128, 128, 0.404);
 }
 </style>

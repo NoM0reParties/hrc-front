@@ -1,8 +1,9 @@
 <template>
-  <!-- <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav> -->
+  <nav>
+    <router-link to="/">Фичи</router-link> |
+    <router-link to="/teams">Команды</router-link> |
+    <router-link to="/dev-teams">Загруженность команд</router-link>
+  </nav>
   <div class="container">
     <router-view />
   </div>

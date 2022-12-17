@@ -40,7 +40,6 @@ export default defineComponent({
         .then((response: AxiosResponse<DeveloperTeamDTO[]>) => {
           this.possibleTeams = response.data;
           if (this.devTeam.id === undefined) {
-            console.log("here");
             this.$emit("devteam", {
               id: response.data[0].id,
               name: response.data[0].name,

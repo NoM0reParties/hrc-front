@@ -40,7 +40,6 @@ export default defineComponent({
           gap: this.sprintGap,
         })
         .then((response: AxiosResponse<SprintDTO>) => {
-          console.log(response.data);
           this.$router.push({ path: "/admin" });
         })
         .catch((error: AxiosError) => {

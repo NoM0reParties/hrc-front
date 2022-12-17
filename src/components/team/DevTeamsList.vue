@@ -1,17 +1,54 @@
 <script lang="ts">
 import { defineComponent, PropType } from "vue";
 import TeamItem from "@/components/team/TeamItem.vue";
-import { DevTeamBySprintDTO } from "@/dto/teams/DevTeamBySprintDTO";
+import TeamLineForm from "@/components/team/TeamLineForm.vue";
+import { DeveloperTeamDTO } from "@/dto/teams/DevTeamBySprintDTO";
+import axios, { AxiosError } from "axios";
 
 export default defineComponent({
   props: {
     teams: {
-      type: Array as PropType<DevTeamBySprintDTO[]>,
+      type: Array as PropType<DeveloperTeamDTO[]>,
       required: true,
+    },
+  },
+  data() {
+    return {
+      addLineOn: false,
+      currentName: "",
+    };
+  },
+  watch: {
+    sprintID() {
+      this.addLineOn = false;
+      this.currentName = "";
+    },
+  },
+  methods: {
+    async changeName(name: string) {
+      this.currentName = name;
+    },
+    async createTeam() {
+      axios
+        .post(`/api/v1/developer-teams/`, {
+          name: this.currentName,
+        })
+        .then(() => {
+          this.$emit("reload");
+        })
+        .catch((error: AxiosError) => {
+          console.log(error);
+        });
+    },
+    async saveChanges() {
+      this.createTeam();
+      this.$emit("reload");
+      this.addLineOn = false;
     },
   },
   components: {
     TeamItem,
+    TeamLineForm,
   },
 });
 </script>
@@ -24,6 +61,20 @@ export default defineComponent({
       :key="team.id"
       @reload="$emit('reload')"
     />
+    <li class="feature__list-item">
+      <div class="center__it">
+        <button class="add__btn" @click="addLineOn = true" v-if="!addLineOn">
+          Добавить Команду
+        </button>
+        <TeamLineForm
+          :name="currentName"
+          @name="changeName"
+          @save="saveChanges"
+          @cancel="addLineOn = false"
+          v-if="addLineOn"
+        />
+      </div>
+    </li>
   </ul>
 </template>
 
@@ -47,5 +98,17 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.add__btn {
+  border-radius: 15px;
+  width: 350px;
+  height: 70px;
+  background-color: white;
+  color: cadetblue;
+  border: none;
+  font-weight: 800;
+  font-size: large;
+  cursor: pointer;
 }
 </style>

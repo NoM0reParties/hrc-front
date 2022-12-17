@@ -2,12 +2,14 @@
 import { defineComponent, PropType } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import DeveloperItem from "@/components/team/DeveloperItem.vue";
-import { DevTeamBySprintDTO } from "@/dto/teams/DevTeamBySprintDTO";
+import DeveloperLineForm from "./DeveloperLineForm.vue";
+import { DeveloperTeamDTO } from "@/dto/teams/DevTeamBySprintDTO";
+import axios, { AxiosError } from "axios";
 
 export default defineComponent({
   props: {
     team: {
-      type: Object as PropType<DevTeamBySprintDTO>,
+      type: Object as PropType<DeveloperTeamDTO>,
       required: true,
     },
   },
@@ -25,21 +27,44 @@ export default defineComponent({
     async clickFeature() {
       this.opened = !this.opened;
     },
+    async createNewDeveloper() {
+      axios
+        .post(`/api/v1/developers/`, {
+          first_name: this.currentFirstName,
+          last_name: this.currentLastName,
+          involvement: this.currentInvolvement,
+          dev_team_id: this.team.id,
+        })
+        .then(() => {
+          this.$emit("reload");
+        })
+        .catch((error: AxiosError) => {
+          console.log(error);
+        });
+    },
+    async firstNameChange(name: string) {
+      this.currentFirstName = name;
+    },
+    async lastNameChange(name: string) {
+      this.currentLastName = name;
+    },
+    async invChange(involvement: number) {
+      this.currentInvolvement = involvement;
+    },
+    async saveChanges() {
+      await this.createNewDeveloper();
+      this.addLineOn = false;
+    },
   },
   components: {
     DeveloperItem,
+    DeveloperLineForm,
   },
   computed: {
     featureStyle() {
       if (this.opened) {
         return {
-          height: `${
-            70 *
-            ((this.team.developers.length > 0
-              ? this.team.developers.length
-              : 1) +
-              1)
-          }px`,
+          height: `${70 * (this.team.developers.length + 2)}px`,
           maxHeight: "auto",
           opacity: 1,
         };
@@ -58,14 +83,14 @@ export default defineComponent({
   <li class="feature__list-item">
     <div class="feature__title" @click="clickFeature">
       <span class="feature__name">{{ team.id }}. {{ team.name }}</span>
-      <span>Количество задач {{ team.developers.length }}</span>
+      <span>Количество разработчиков {{ team.developers.length }}</span>
     </div>
     <ul class="orders" :style="featureStyle">
       <li class="orders__item">
         <span class="order__item-col">Имя</span>
+        <span class="order__item-col">Фамилия</span>
         <span class="order__item-col">Вовлеченность</span>
-        <span class="order__item-col">Загруженность</span>
-        <span class="order__item-col">Количество задач</span>
+        <span class="order__item-col"></span>
       </li>
       <DeveloperItem
         v-for="developer in team.developers"
@@ -73,13 +98,24 @@ export default defineComponent({
         :key="developer.id"
         @reload="$emit('reload')"
       />
-      <li
-        class="orders__item"
-        v-if="team.developers.length === 0"
-        style="justify-content: center"
-      >
-        В Этой команде пока нет разработчиков
+      <li class="orders__item" v-if="!addLineOn">
+        <div class="center__it">
+          <button class="add__btn" @click="addLineOn = true">
+            Добавить разработчика
+          </button>
+        </div>
       </li>
+      <DeveloperLineForm
+        :first-name="currentFirstName"
+        :last-name="currentLastName"
+        :involvement="currentInvolvement"
+        @first="firstNameChange"
+        @last="lastNameChange"
+        @involvement="invChange"
+        v-if="addLineOn"
+        @save="saveChanges"
+        @cancel="addLineOn = false"
+      />
     </ul>
   </li>
 </template>

@@ -1,9 +1,8 @@
 <script lang="ts">
 import { defineComponent, PropType } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
-import DeveloperItem from "@/components/team/DeveloperItem.vue";
-import DeveloperLineForm from "./DeveloperLineForm.vue";
-import axios, { AxiosError } from "axios";
+import DeveloperItem from "@/components/team-load/DeveloperItem.vue";
+import PersonalLoad from "@/components/metrics-composnents/PersonalLoad.vue";
 import { DevTeamBySprintDTO } from "@/dto/teams/DevTeamBySprintDTO";
 
 export default defineComponent({
@@ -27,43 +26,22 @@ export default defineComponent({
     async clickFeature() {
       this.opened = !this.opened;
     },
-    async createNewDeveloper() {
-      axios
-        .post(`/api/v1/feature-team-orders/`, {
-          first_name: this.currentFirstName,
-          last_name: this.currentLastName,
-          involvement: this.currentInvolvement,
-        })
-        .then(() => {
-          this.$emit("reload");
-        })
-        .catch((error: AxiosError) => {
-          console.log(error);
-        });
-    },
-    async firstNameChange(name: string) {
-      this.currentFirstName = name;
-    },
-    async lastNameChange(name: string) {
-      this.currentLastName = name;
-    },
-    async invChange(involvement: number) {
-      this.currentInvolvement = involvement;
-    },
-    async saveChanges() {
-      await this.createNewDeveloper();
-      this.addLineOn = false;
-    },
   },
   components: {
     DeveloperItem,
-    DeveloperLineForm,
+    PersonalLoad,
   },
   computed: {
     featureStyle() {
       if (this.opened) {
         return {
-          height: `${70 * (this.team.developers.length + 2)}px`,
+          height: `${
+            70 *
+            ((this.team.developers.length > 0
+              ? this.team.developers.length
+              : 1) +
+              1)
+          }px`,
           maxHeight: "auto",
           opacity: 1,
         };
@@ -81,8 +59,19 @@ export default defineComponent({
 <template>
   <li class="feature__list-item">
     <div class="feature__title" @click="clickFeature">
-      <span class="feature__name">{{ team.id }}. {{ team.name }}</span>
-      <span>Количество задач {{ team.developers.length }}</span>
+      <span class="feature__name order__item-col"
+        >{{ team.id }}. {{ team.name }}</span
+      >
+      <span class="order__item-col"
+        >Количество разработчиков {{ team.developers.length }}</span
+      >
+      <span class="order__item-col"
+        ><PersonalLoad
+          :current="team.team_load"
+          :overall="team.team_load_overall"
+          :height="35"
+          fade-color="white"
+      /></span>
     </div>
     <ul class="orders" :style="featureStyle">
       <li class="orders__item">
@@ -90,7 +79,6 @@ export default defineComponent({
         <span class="order__item-col">Вовлеченность</span>
         <span class="order__item-col">Загруженность</span>
         <span class="order__item-col">Количество задач</span>
-        <span class="order__item-col"></span>
       </li>
       <DeveloperItem
         v-for="developer in team.developers"
@@ -98,24 +86,13 @@ export default defineComponent({
         :key="developer.id"
         @reload="$emit('reload')"
       />
-      <li class="orders__item" v-if="!addLineOn">
-        <div class="center__it">
-          <button class="add__btn" @click="addLineOn = true">
-            Добавить разработчика
-          </button>
-        </div>
+      <li
+        class="orders__item"
+        v-if="team.developers.length === 0"
+        style="justify-content: center"
+      >
+        В Этой команде пока нет разработчиков
       </li>
-      <DeveloperLineForm
-        :first-name="currentFirstName"
-        :last-name="currentLastName"
-        :involvement="currentInvolvement"
-        @first="firstNameChange"
-        @last="lastNameChange"
-        @involvement="invChange"
-        v-if="addLineOn"
-        @save="saveChanges"
-        @cancel="addLineOn = false"
-      />
     </ul>
   </li>
 </template>

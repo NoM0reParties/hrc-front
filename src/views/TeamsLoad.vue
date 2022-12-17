@@ -1,16 +1,16 @@
 <template>
   <div>
-    <DeveloperTeams />
+    <TeamsLoad />
   </div>
 </template>
 
 <script lang="ts">
-import DeveloperTeams from "@/components/TeamsLoad.vue";
+import TeamsLoad from "@/components/DeveloperTeams.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   components: {
-    DeveloperTeams,
+    TeamsLoad,
   },
 });
 </script>

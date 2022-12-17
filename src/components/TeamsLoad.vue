@@ -3,15 +3,15 @@ import { defineComponent } from "vue";
 import "@vuepic/vue-datepicker/dist/main.css";
 import axios, { AxiosResponse, AxiosError } from "axios";
 import { SprintDTO } from "@/dto/admin/sprint";
-import { FeatureBySprintDTO } from "@/dto/feature-by-sprint";
 import SprintList from "@/components/dashboard/SprintList.vue";
-import FeaturesList from "@/components/dashboard/FeatureList.vue";
+import DevTeamsList from "./team-load/DevTeamsList.vue";
+import { DevTeamBySprintDTO } from "@/dto/teams/DevTeamBySprintDTO";
 
 export default defineComponent({
   data() {
     return {
       sprintList: [] as SprintDTO[],
-      featureList: {} as FeatureBySprintDTO[],
+      teamList: {} as DevTeamBySprintDTO[],
       currSprintID: 0 as number,
     };
   },
@@ -29,11 +29,11 @@ export default defineComponent({
           console.log(error);
         });
     },
-    async fetchFeaturesList() {
+    async fetchDevTeamsList() {
       axios
-        .get(`/api/v1/features/sprint/${this.currSprintID}`)
-        .then((response: AxiosResponse<FeatureBySprintDTO[]>) => {
-          this.featureList = response.data;
+        .get(`/api/v1/developer-teams/sprint/${this.currSprintID}`)
+        .then((response: AxiosResponse<DevTeamBySprintDTO[]>) => {
+          this.teamList = response.data;
         })
         .catch((error: AxiosError) => {
           console.log(error);
@@ -41,19 +41,23 @@ export default defineComponent({
     },
     async handleSprint(sprintID: number) {
       this.currSprintID = sprintID;
-      await this.fetchFeaturesList();
+      await this.fetchDevTeamsList();
     },
     async reloadData() {
-      this.fetchFeaturesList();
+      this.fetchDevTeamsList();
     },
   },
   async created() {
     await this.fetchSprintList();
-    await this.fetchFeaturesList();
+  },
+  watch: {
+    currSprintID() {
+      this.fetchDevTeamsList();
+    },
   },
   components: {
     SprintList,
-    FeaturesList,
+    DevTeamsList,
   },
 });
 </script>
@@ -67,9 +71,9 @@ export default defineComponent({
       @sprint="handleSprint"
       @newsprint="fetchSprintList"
     />
-    <h3>Фичи</h3>
-    <FeaturesList
-      :features="featureList"
+    <h3>Команды</h3>
+    <DevTeamsList
+      :teams="teamList"
       :sprint-i-d="currSprintID"
       @reload="reloadData"
     />
