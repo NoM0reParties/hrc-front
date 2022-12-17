@@ -8,3 +8,10 @@ export interface DevTeamBySprintDTO {
     fto_overall: number
     fto_assigned: number
 }
+
+
+export interface DeveloperTeamDTO {
+    id: number
+    name: string
+    developers: DeveloperDTO[]
+}
